@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Innsendingsoppgave 2 - Miaow Miaow møter fisken</title>
+    <link rel="stylesheet" href="css/oppgave2.css" type="text/css">
+</head>
+<body>
+    
+    <div id="menu-container">
+        <input id="move-up-btn" type="button" value="Opp" style="position: relative; left: 66px;">
+        <br>
+        <input id="move-left-btn" type="button" value="Venstre" style="position: relative; top: -10px;">
+        <input id="move-down-btn" type="button" value="Ned" style="position: relative; top: 5px;"> 
+        <input id="move-right-btn" type="button" value="Høyre" style="position: relative; top: -10px;">
+    </div>
+    
+    <div id="game-container">
+        <p>Antall steg: <span id="number-of-steps-span">0</span></p>
+        <img id="miaow-miaow" src="images/miaow-miaow.png">
+        <img id="the-mighty-fish" src="images/fish.png">
+        <h2 id="fish-room-title">Fiskens rom</h2>
+        <div id="line-div"></div>
+    </div>
+    <div id="dialogue-output-div">
+        <p>Miaow Miaow: <span id="miaow-miaow-says">...</span></p>
+        <p>Fisken: <span id="fish-says">...</span></p>
+    </div>
+
+    <script>
+
+        const miaowMiaow = document.getElementById('miaow-miaow');
+        const fish = document.getElementById('the-mighty-fish');
+        const stepCounter = document.getElementById('number-of-steps-span');
+        const upBtn = document.getElementById('move-up-btn');
+        const downBtn = document.getElementById('move-down-btn');
+        const leftBtn = document.getElementById('move-left-btn');
+        const rightBtn = document.getElementById('move-right-btn');
+
+        const catText = document.getElementById('miaow-miaow-says');
+        const fishText = document.getElementById('fish-says');
+
+        const questions = ["Hva heter du?", "Hvor gammel er du?", "Hvor bor du?", "Hva er du for art av fisk?", "Hva synes du om katter?"];
+        const answers = ["Mitt navn er Gjørt.", "Jeg vet ikke hvor gammel jeg er.", "Jeg bor her på rommet, mitt.", "Jeg er en type torsk.", "Jeg synes de er helt ok, bare de ikke kommer for nære."]
+
+        miaowMiaow.style.position = "absolute";
+        miaowMiaow.style.left = "0px";
+        miaowMiaow.style.top = "20px";
+
+        let stepCount = 0;
+        stepCounter.innerText = stepCount;
+        
+        function moveUp() {
+            if (parseInt(miaowMiaow.style.top) <= 20) {
+                miaowMiaow.style.top = "0px";
+            } else {
+            miaowMiaow.style.top = parseInt(miaowMiaow.style.top) - 50 + "px";
+            stepCount++;
+            stepCounter.innerText = stepCount;
+            fishText.innerText = "...";
+            catText.innerText = "...";
+        }
+    }
+        function moveDown() {
+            if (parseInt(miaowMiaow.style.top) >= 470) {
+                miaowMiaow.style.top = "500px";
+            } else {
+            miaowMiaow.style.top = parseInt(miaowMiaow.style.top) + 50 + "px";
+            stepCount++;
+            stepCounter.innerText = stepCount;
+            fishText.innerText = "...";
+            catText.innerText = "...";
+        }
+    }
+        function moveLeft() {
+            if (parseInt(miaowMiaow.style.left) <= 0) {
+                miaowMiaow.style.left = "0px";
+            } else {
+                
+            miaowMiaow.style.left = parseInt(miaowMiaow.style.left) - 50 + "px";
+            stepCount++;
+            stepCounter.innerText = stepCount;
+            fishText.innerText = "...";
+            catText.innerText = "...";
+        }
+    }
+        function moveRight() {
+            if (parseInt(miaowMiaow.style.left) >= 700) {
+                miaowMiaow.style.left = "0px";
+                miaowMiaow.style.top = "20px";
+                stepCount = 0;
+                stepCounter.innerText = stepCount;
+                fishText.innerText = "EY! Det var litt for nærme!";
+                catText.innerText = "...";
+            } else {
+            miaowMiaow.style.left = parseInt(miaowMiaow.style.left) + 50 + "px";
+            stepCount++;
+            stepCounter.innerText = stepCount; 
+            fishText.innerText = "...";
+            catText.innerText = "...";
+        }
+    }
+
+        function askQuestuion() {
+            if (miaowMiaow.style.left <= "599px") {
+                fishText.innerText = "Ehh, jeg hører ikke hva du sier, kan du komme litt nærmere?";
+            } else {
+                let randomQuestion = Math.floor(Math.random() * questions.length);
+                catText.innerText = questions[randomQuestion];
+                fishText.innerText = answers[randomQuestion];    
+            }
+    }
+
+        upBtn.addEventListener('click', moveUp);
+
+        downBtn.addEventListener('click', moveDown);
+
+        leftBtn.addEventListener('click', moveLeft);
+
+        rightBtn.addEventListener('click', moveRight);
+
+        fish.addEventListener('click', askQuestuion);
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowUp' || event.key === 'w') {
+                moveUp();
+            } else if (event.key === 'ArrowDown' || event.key === 's') {
+                moveDown();
+            } else if (event.key === 'ArrowLeft' || event.key === 'a') {
+                moveLeft();
+            } else if (event.key === 'ArrowRight' || event.key === 'd') {
+                moveRight();
+            }
+               });
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                askQuestuion();
+            }
+        });
+    </script>
+    
+</body>
+</html>
