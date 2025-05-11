@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ice Sliding Puzzle</title>
+  <style>
+    body {
+      background-color: aqua;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    #map-1 {
+      position: relative;
+      background-color: rgb(224, 255, 255);
+      border: 2px solid black;
+      display: block;
+    }
+
+    .tile {
+      width: 50px;
+      height: 50px;
+      position: absolute;
+      box-shadow: inset 0 0 5px white;
+    }
+
+    .ice { background-color: rgb(180, 240, 255); border: 1px solid rgba(0,0,0,0.1); }
+    .rock { background-color: gray; }
+    .entrance { background-color: rgb(145, 100, 0); }
+    .exit { background-color: rgb(145, 100, 0); }
+
+    #player-box {
+      background-color: blue;
+      width: 50px;
+      height: 50px;
+      border-radius: 30px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: top 1s, left 1s;
+      z-index: 10;  /* Ensure it's above map elements */
+    }
+  </style>
+</head>
+<body>
+    <div id="info">
+  <p>Moves: <span id="moveCounter">0</span></p>
+  <p>Time: <span id="timer">0.0</span> seconds</p>
+</div>
+<button id="tryAgainBtn" style="display:none;">Try Again</button>
+
+  <h1 style="color: aliceblue; text-shadow: 2px 2px 4px black;">Ice Sliding Puzzle</h1>
+  <div id="map-1">
+    <div id="player-box"></div>
+  </div>
+
+  <script>
+    const map1 = document.getElementById("map-1");
+    const player = document.getElementById("player-box");
+
+    const tileSize = 50;
+    const mapData = [
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1],
+      [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      [1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1],
+      [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+      [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ];
+
+    const mapWidth = mapData[0].length;
+    const mapHeight = mapData.length;
+
+    map1.style.width = `${mapWidth * tileSize}px`;
+    map1.style.height = `${mapHeight * tileSize}px`;
+
+    let playerPosition = { x: 1, y: 1 }; // Start player position on entrance
+    player.style.left = `${playerPosition.x * tileSize}px`;
+    player.style.top = `${playerPosition.y * tileSize}px`;
+    let isMoving = false;
+
+    function drawMap() {
+      map1.querySelectorAll(".tile").forEach(tile => tile.remove()); // Remove only tiles, not the player
+      for (let y = 0; y < mapData.length; y++) {
+        for (let x = 0; x < mapData[0].length; x++) {
+          const tile = document.createElement("div");
+          tile.classList.add("tile");
+          tile.style.left = `${x * tileSize}px`;
+          tile.style.top = `${y * tileSize}px`;
+
+          if (mapData[y][x] === 0) tile.classList.add("ice");
+          else if (mapData[y][x] === 1) tile.classList.add("rock");
+          else if (mapData[y][x] === 2) {
+            tile.classList.add("entrance");
+            playerPosition = { x, y }; // Set player start position
+            console.log(`Player starting position: (${x}, ${y})`); // Log position
+            player.style.left = `${x * tileSize}px`;
+            player.style.top = `${y * tileSize}px`;
+          }
+          else if (mapData[y][x] === 3) tile.classList.add("exit");
+
+          map1.appendChild(tile);
+        }
+      }
+    }
+
+    function canSlideTo(x, y) {
+      return x >= 0 && x < mapWidth && y >= 0 && y < mapHeight && mapData[y][x] !== 1;
+    }
+
+    function slidePlayer(dx, dy) {
+      if (isMoving) return;
+
+      let x = playerPosition.x;
+      let y = playerPosition.y;
+
+      while (canSlideTo(x + dx, y + dy)) {
+        x += dx;
+        y += dy;
+        if (mapData[y][x] === 3) break; // Stop on exit
+      }
+
+      if (x === playerPosition.x && y === playerPosition.y) return;
+
+      isMoving = true;
+      playerPosition = { x, y };
+      player.style.left = `${x * tileSize}px`;
+      player.style.top = `${y * tileSize}px`;
+
+      if (mapData[y][x] === 3) {
+        setTimeout(() => {
+          setTimeout(() => {
+            alert("🎉 You reached the exit!");
+          }, 1000); // Match the animation duration (1 second)
+        }, 300);
+      }
+    }
+
+    window.addEventListener("keydown", (event) => {
+      if (isMoving) return;
+
+      switch (event.key) {
+        case "ArrowUp": slidePlayer(0, -1); break;
+        case "ArrowDown": slidePlayer(0, 1); break;
+        case "ArrowLeft": slidePlayer(-1, 0); break;
+        case "ArrowRight": slidePlayer(1, 0); break;
+      }
+    });
+
+    let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener("touchstart", (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, false);
+
+document.addEventListener("touchend", (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    // Horizontal swipe
+    if (dx > 30) slide("ArrowRight");
+    else if (dx < -30) slide("ArrowLeft");
+  } else {
+    // Vertical swipe
+    if (dy > 30) slide("ArrowDown");
+    else if (dy < -30) slide("ArrowUp");
+  }
+}, false);
+
+
+    player.addEventListener("transitionend", () => {
+      isMoving = false;
+    });
+
+    drawMap();
+
+    let moveCount = 0;
+let timerStarted = false;
+let startTime;
+let timerInterval;
+
+// Update move counter on screen
+function updateMoveCounter() {
+  document.getElementById('moveCounter').textContent = moveCount;
+}
+
+// Start the stopwatch
+function startTimer() {
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    const elapsed = (Date.now() - startTime) / 1000;
+    document.getElementById('timer').textContent = elapsed.toFixed(1);
+  }, 100);
+}
+
+// Stop the stopwatch
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+// Handle player move
+function movePlayer(newRow, newCol) {
+  // Only start timer on first move
+  if (!timerStarted) {
+    timerStarted = true;
+    startTimer();
+  }
+
+  if (mapData[newRow][newCol] !== 1) {
+    // Update map
+    mapData[playerPosition.row][playerPosition.col] = 0;
+    playerPosition = { row: newRow, col: newCol };
+    moveCount++;
+    updateMoveCounter();
+
+    // Win check
+    if (mapData[newRow][newCol] === 3) {
+      stopTimer();
+      alert("You reached the exit!");
+      document.getElementById("tryAgainBtn").style.display = "block";
+    }
+
+    mapData[newRow][newCol] = 2;
+    renderMap();
+  }
+}
+document.getElementById("tryAgainBtn").addEventListener("click", () => {
+  location.reload(); // Reloads the page to reset the game
+});
+
+  </script>
+</body>
+</html>
